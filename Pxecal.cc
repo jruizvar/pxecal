@@ -57,6 +57,10 @@
 // --- GenParticles
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
+// --- SimTracks & SimVertex
+#include "SimDataFormats/Track/interface/SimTrackContainer.h"
+#include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
+
 // --- Beam Spot
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
@@ -84,6 +88,15 @@ class Pxecal : public edm::EDAnalyzer {
       std::vector<int>         pileup;
       float                beamspot_x;
       float                beamspot_y;
+      int                    simtrk_n;
+      std::vector<float>    simtrk_pt;
+      std::vector<float>   simtrk_eta;
+      std::vector<float>   simtrk_phi;
+      std::vector<int>      simtrk_id;
+      std::vector<int>    simtrk_type;
+      std::vector<float>    simtrk_vx;
+      std::vector<float>    simtrk_vy;
+      std::vector<float>    simtrk_vz;
       int                   genpart_n;
       std::vector<float>    genpart_e;
       std::vector<float>   genpart_et;
@@ -132,13 +145,22 @@ Pxecal::Pxecal(const edm::ParameterSet& iConfig)
    //now do what ever initialization is needed
   edm::Service<TFileService> fs;
   t = fs->make<TTree>("t","t");
-  t->Branch("run",           &run);
-  t->Branch("event",         &event);
-  t->Branch("bz",            &bz);
-  t->Branch("bunchN",        &bunch_n);
-  t->Branch("pileup",        &pileup);
-  t->Branch("BS_X",          &beamspot_x);
-  t->Branch("BS_Y",          &beamspot_y);
+  t->Branch("Run",           &run);
+  t->Branch("Event",         &event);
+  t->Branch("BZfield",       &bz);
+  t->Branch("BunchN",        &bunch_n);
+  t->Branch("Pileup",        &pileup);
+  t->Branch("BeamSpotX",     &beamspot_x);
+  t->Branch("BeamSpotY",     &beamspot_y);
+  t->Branch("SimTrkN",       &simtrk_n);
+  t->Branch("SimTrkPt",      &simtrk_pt);
+  t->Branch("SimTrkEta",     &simtrk_eta);
+  t->Branch("SimTrkPhi",     &simtrk_phi);
+  t->Branch("SimTrkId",      &simtrk_id);
+  t->Branch("SimTrkType",    &simtrk_type);
+  t->Branch("SimTrkVx",      &simtrk_vx);
+  t->Branch("SimTrkVy",      &simtrk_vy);
+  t->Branch("SimTrkVz",      &simtrk_vz);
   t->Branch("GenPartN",      &genpart_n);
   t->Branch("GenPartE",      &genpart_e);
   t->Branch("GenPartEt",     &genpart_et);
@@ -287,8 +309,8 @@ void Pxecal::analyze(const edm::Event& e, const edm::EventSetup& es)
   ///////////////////////////////////////////////////////////
   // L1 Ecal Trigger Primitives
   //////////////////////////////////////////////////////////
-  edm::Handle<l1extra::L1EmParticleCollection> Egamma;
-  e.getByLabel(edm::InputTag("SLHCL1ExtraParticles","EGamma"), Egamma);
+  edm::Handle< l1extra::L1EmParticleCollection > Egamma;
+  e.getByLabel( "SLHCL1ExtraParticles","EGamma", Egamma );
   egamma_n = 0;
   for(l1extra::L1EmParticleCollection::const_iterator it = Egamma->begin(); it!=Egamma->end(); ++it){
     egamma_e.push_back(it->energy());
@@ -303,10 +325,31 @@ void Pxecal::analyze(const edm::Event& e, const edm::EventSetup& es)
     egamma_n++;
   }
   ///////////////////////////////////////////////////////////
+  // SimTracks & SimVertices
+  //////////////////////////////////////////////////////////
+  edm::Handle< edm::SimTrackContainer >   simTrackHandle;
+  edm::Handle< edm::SimVertexContainer >  simVertex;
+  e.getByLabel( "g4SimHits", simTrackHandle );
+  e.getByLabel( "g4SimHits", simVertex );
+  edm::SimTrackContainer::const_iterator iterSimTracks;
+  simtrk_n = 0;
+  for (iterSimTracks = simTrackHandle->begin(); iterSimTracks != simTrackHandle->end(); ++iterSimTracks) {
+    simtrk_n++;
+    simtrk_pt.push_back( iterSimTracks->momentum().pt() );   
+    simtrk_eta.push_back( iterSimTracks->momentum().eta() );   
+    simtrk_phi.push_back( iterSimTracks->momentum().phi() );   
+    simtrk_id.push_back( iterSimTracks->trackId() );   
+    simtrk_type.push_back( iterSimTracks->type() );   
+    int index = iterSimTracks->vertIndex();
+    simtrk_vx.push_back( simVertex->at(index).position().x() );   
+    simtrk_vy.push_back( simVertex->at(index).position().y() );   
+    simtrk_vz.push_back( simVertex->at(index).position().z() );   
+  }
+  ///////////////////////////////////////////////////////////
   // Gen Particles  
   //////////////////////////////////////////////////////////
   edm::Handle< reco::GenParticleCollection > genParticles;
-  e.getByLabel("genParticles", genParticles);
+  e.getByLabel( "genParticles", genParticles );
   genpart_n = 0;
   genel_n = 0;
   for(size_t i = 0; i < genParticles->size(); ++i){
@@ -370,6 +413,14 @@ Pxecal::endJob()
 void Pxecal::InitializeVectors()
 {
           pileup.clear();
+       simtrk_pt.clear();  
+      simtrk_eta.clear();
+      simtrk_phi.clear();
+       simtrk_id.clear();
+     simtrk_type.clear();
+       simtrk_vx.clear();
+       simtrk_vy.clear();
+       simtrk_vz.clear();
        genpart_e.clear();
       genpart_et.clear();
       genpart_pt.clear();
