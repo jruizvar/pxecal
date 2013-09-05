@@ -37,7 +37,7 @@ process.options = cms.untracked.PSet(
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
     version = cms.untracked.string('\\$Revision: 1.1 $'),
-    annotation = cms.untracked.string('Summer 12: Flat Random Pt Gun: neutrino, 2<Pt<20, -3<Eta<3'),
+    annotation = cms.untracked.string('Summer 12: Flat Random Pt Gun: electron, 5<Pt<50, -2.5<Eta<2.5'),
     name = cms.untracked.string('\\$Source: /local/reps/CMSSW/CMSSW/Configuration/GenProduction/python/FourteenTeV/Neutrino_Pt2to20_gun_cff.py,v $')
 )
 
