@@ -94,9 +94,9 @@ class Pxecal : public edm::EDAnalyzer {
       std::vector<float>   simtrk_phi;
       std::vector<int>      simtrk_id;
       std::vector<int>    simtrk_type;
-      std::vector<float>    simtrk_vx;
-      std::vector<float>    simtrk_vy;
-      std::vector<float>    simtrk_vz;
+      float                    gen_vx;
+      float                    gen_vy;
+      float                    gen_vz;
       int                   genpart_n;
       std::vector<float>    genpart_e;
       std::vector<float>   genpart_et;
@@ -158,9 +158,9 @@ Pxecal::Pxecal(const edm::ParameterSet& iConfig)
   t->Branch("SimTrkPhi",     &simtrk_phi);
   t->Branch("SimTrkId",      &simtrk_id);
   t->Branch("SimTrkType",    &simtrk_type);
-  t->Branch("SimTrkVx",      &simtrk_vx);
-  t->Branch("SimTrkVy",      &simtrk_vy);
-  t->Branch("SimTrkVz",      &simtrk_vz);
+  t->Branch("GenVx",         &gen_vx);
+  t->Branch("GenVy",         &gen_vy);
+  t->Branch("GenVz",         &gen_vz);
   t->Branch("GenPartN",      &genpart_n);
   t->Branch("GenPartE",      &genpart_e);
   t->Branch("GenPartEt",     &genpart_et);
@@ -341,9 +341,11 @@ void Pxecal::analyze(const edm::Event& e, const edm::EventSetup& es)
     simtrk_id.push_back( iterSimTracks->trackId() );   
     simtrk_type.push_back( iterSimTracks->type() );   
     int index = iterSimTracks->vertIndex();
-    simtrk_vx.push_back( simVertex->at(index).position().x() );   
-    simtrk_vy.push_back( simVertex->at(index).position().y() );   
-    simtrk_vz.push_back( simVertex->at(index).position().z() );   
+    if(index==0){
+      gen_vx = simVertex->at(index).position().x();   
+      gen_vy = simVertex->at(index).position().y();   
+      gen_vz = simVertex->at(index).position().z();   
+    }
   }
   ///////////////////////////////////////////////////////////
   // Gen Particles  
@@ -418,9 +420,6 @@ void Pxecal::InitializeVectors()
       simtrk_phi.clear();
        simtrk_id.clear();
      simtrk_type.clear();
-       simtrk_vx.clear();
-       simtrk_vy.clear();
-       simtrk_vz.clear();
        genpart_e.clear();
       genpart_et.clear();
       genpart_pt.clear();
