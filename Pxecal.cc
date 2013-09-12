@@ -86,20 +86,30 @@ class Pxecal : public edm::EDAnalyzer {
       float                        bz;
       int                     bunch_n;
       std::vector<int>         pileup;
-      float                beamspot_x;
-      float                beamspot_y;
+      float               beamspot_x0;
+      float               beamspot_y0;
+      float               beamspot_z0;
+      float          beamspot_x0Error;
+      float          beamspot_y0Error;
+      float          beamspot_z0Error;
       float           beamspot_widthX;
       float           beamspot_widthY;
       float           beamspot_sigmaZ;
+      float      beamspot_widthXError;
+      float      beamspot_widthYError;
+      float      beamspot_sigmaZError;
       int                    simtrk_n;
       std::vector<float>    simtrk_pt;
       std::vector<float>   simtrk_eta;
       std::vector<float>   simtrk_phi;
       std::vector<int>      simtrk_id;
       std::vector<int>    simtrk_type;
-      float                    gen_vx;
-      float                    gen_vy;
-      float                    gen_vz;
+      std::vector<float>    simtrk_vx;
+      std::vector<float>    simtrk_vy;
+      std::vector<float>    simtrk_vz;
+      float                    sim_vx;
+      float                    sim_vy;
+      float                    sim_vz;
       int                   genpart_n;
       std::vector<float>    genpart_e;
       std::vector<float>   genpart_et;
@@ -148,63 +158,73 @@ Pxecal::Pxecal(const edm::ParameterSet& iConfig)
    //now do what ever initialization is needed
   edm::Service<TFileService> fs;
   t = fs->make<TTree>("t","t");
-  t->Branch("Run",            &run);
-  t->Branch("Event",          &event);
-  t->Branch("BZfield",        &bz);
-  t->Branch("BunchN",         &bunch_n);
-  t->Branch("Pileup",         &pileup);
-  t->Branch("BeamSpotX",      &beamspot_x);
-  t->Branch("BeamSpotY",      &beamspot_y);
-  t->Branch("BeamSpotWidthX", &beamspot_widthX);
-  t->Branch("BeamSpotWidthY", &beamspot_widthY);
-  t->Branch("BeamSpotSigmaZ", &beamspot_sigmaZ);
-  t->Branch("SimTrkN",        &simtrk_n);
-  t->Branch("SimTrkPt",       &simtrk_pt);
-  t->Branch("SimTrkEta",      &simtrk_eta);
-  t->Branch("SimTrkPhi",      &simtrk_phi);
-  t->Branch("SimTrkId",       &simtrk_id);
-  t->Branch("SimTrkType",     &simtrk_type);
-  t->Branch("GenVx",          &gen_vx);
-  t->Branch("GenVy",          &gen_vy);
-  t->Branch("GenVz",          &gen_vz);
-  t->Branch("GenPartN",       &genpart_n);
-  t->Branch("GenPartE",       &genpart_e);
-  t->Branch("GenPartEt",      &genpart_et);
-  t->Branch("GenPartPt",      &genpart_pt);
-  t->Branch("GenPartEta",     &genpart_eta);
-  t->Branch("GenPartPhi",     &genpart_phi);
-  t->Branch("GenPartCharge",  &genpart_charge);
-  t->Branch("GenPartId",      &genpart_id);
-  t->Branch("GenElN",         &genel_n);
-  t->Branch("GenElE",         &genel_e);
-  t->Branch("GenElEt",        &genel_et);
-  t->Branch("GenElPt",        &genel_pt);
-  t->Branch("GenElEta",       &genel_eta);
-  t->Branch("GenElPhi",       &genel_phi);
-  t->Branch("GenElCharge",    &genel_charge);
-  t->Branch("GenElId",        &genel_id);
-  t->Branch("EgN",            &egamma_n);
-  t->Branch("EgE",            &egamma_e);
-  t->Branch("EgEt",           &egamma_et);
-  t->Branch("EgEta",          &egamma_eta);
-  t->Branch("EgPhi",          &egamma_phi);
-  t->Branch("EgGx",           &egamma_gx);
-  t->Branch("EgGy",           &egamma_gy);
-  t->Branch("EgGz",           &egamma_gz);
-  t->Branch("EgCharge",       &egamma_charge);
-  t->Branch("ClN",            &recHit_n);
-  t->Branch("ClLx",           &recHit_lx);
-  t->Branch("ClLy",           &recHit_ly);
-  t->Branch("ClGx",           &recHit_gx);
-  t->Branch("ClGy",           &recHit_gy);
-  t->Branch("ClGz",           &recHit_gz);
-  t->Branch("ClRho",          &recHit_rho);
-  t->Branch("ClSubid",        &recHit_subid);
-  t->Branch("ClLayer",        &recHit_layer);
-  t->Branch("ClDisk",         &recHit_disk);
-  t->Branch("ClSize",         &recHit_spread);
-  t->Branch("ClSizeX",        &recHit_spreadx);
-  t->Branch("ClSizeY",        &recHit_spready);
+  t->Branch("Run",                 &run);
+  t->Branch("Event",               &event);
+  t->Branch("BZfield",             &bz);
+  t->Branch("BunchN",              &bunch_n);
+  t->Branch("Pileup",              &pileup);
+  t->Branch("BeamSpotX0",          &beamspot_x0);
+  t->Branch("BeamSpotY0",          &beamspot_y0);
+  t->Branch("BeamSpotZ0",          &beamspot_z0);
+  t->Branch("BeamSpotX0Error",     &beamspot_x0Error);
+  t->Branch("BeamSpotY0Error",     &beamspot_y0Error);
+  t->Branch("BeamSpotZ0Error",     &beamspot_z0Error);
+  t->Branch("BeamSpotWidthX",      &beamspot_widthX);
+  t->Branch("BeamSpotWidthY",      &beamspot_widthY);
+  t->Branch("BeamSpotSigmaZ",      &beamspot_sigmaZ);
+  t->Branch("BeamSpotWidthXError", &beamspot_widthXError);
+  t->Branch("BeamSpotWidthYError", &beamspot_widthYError);
+  t->Branch("BeamSpotSigmaZError", &beamspot_sigmaZError);
+  t->Branch("SimTrkN",             &simtrk_n);
+  t->Branch("SimTrkPt",            &simtrk_pt);
+  t->Branch("SimTrkEta",           &simtrk_eta);
+  t->Branch("SimTrkPhi",           &simtrk_phi);
+  t->Branch("SimTrkId",            &simtrk_id);
+  t->Branch("SimTrkType",          &simtrk_type);
+  t->Branch("SimTrkVx",            &simtrk_vx);
+  t->Branch("SimTrkVy",            &simtrk_vy);
+  t->Branch("SimTrkVz",            &simtrk_vz);
+  t->Branch("GenVx",               &sim_vx);
+  t->Branch("GenVy",               &sim_vy);
+  t->Branch("GenVz",               &sim_vz);
+  t->Branch("GenPartN",            &genpart_n);
+  t->Branch("GenPartE",            &genpart_e);
+  t->Branch("GenPartEt",           &genpart_et);
+  t->Branch("GenPartPt",           &genpart_pt);
+  t->Branch("GenPartEta",          &genpart_eta);
+  t->Branch("GenPartPhi",          &genpart_phi);
+  t->Branch("GenPartCharge",       &genpart_charge);
+  t->Branch("GenPartId",           &genpart_id);
+  t->Branch("GenElN",              &genel_n);
+  t->Branch("GenElE",              &genel_e);
+  t->Branch("GenElEt",             &genel_et);
+  t->Branch("GenElPt",             &genel_pt);
+  t->Branch("GenElEta",            &genel_eta);
+  t->Branch("GenElPhi",            &genel_phi);
+  t->Branch("GenElCharge",         &genel_charge);
+  t->Branch("GenElId",             &genel_id);
+  t->Branch("EgN",                 &egamma_n);
+  t->Branch("EgE",                 &egamma_e);
+  t->Branch("EgEt",                &egamma_et);
+  t->Branch("EgEta",               &egamma_eta);
+  t->Branch("EgPhi",               &egamma_phi);
+  t->Branch("EgGx",                &egamma_gx);
+  t->Branch("EgGy",                &egamma_gy);
+  t->Branch("EgGz",                &egamma_gz);
+  t->Branch("EgCharge",            &egamma_charge);
+  t->Branch("ClN",                 &recHit_n);
+  t->Branch("ClLx",                &recHit_lx);
+  t->Branch("ClLy",                &recHit_ly);
+  t->Branch("ClGx",                &recHit_gx);
+  t->Branch("ClGy",                &recHit_gy);
+  t->Branch("ClGz",                &recHit_gz);
+  t->Branch("ClRho",               &recHit_rho);
+  t->Branch("ClSubid",             &recHit_subid);
+  t->Branch("ClLayer",             &recHit_layer);
+  t->Branch("ClDisk",              &recHit_disk);
+  t->Branch("ClSize",              &recHit_spread);
+  t->Branch("ClSizeX",             &recHit_spreadx);
+  t->Branch("ClSizeY",             &recHit_spready);
 }
 
 Pxecal::~Pxecal()
@@ -270,48 +290,47 @@ void Pxecal::analyze(const edm::Event& e, const edm::EventSetup& es)
   // RecHits
   //////////////////////////////////////////////////////////
   edm::Handle<SiPixelRecHitCollection> recHitColl;
-  e.getByLabel( "siPixelRecHits", recHitColl);
+  e.getByLabel( "siPixelRecHits", recHitColl );
   SiPixelRecHitCollection::const_iterator recHitIdIterator    = (recHitColl.product())->begin();
   SiPixelRecHitCollection::const_iterator recHitIdIteratorEnd = (recHitColl.product())->end();
-  // Loop over Detector IDs
   recHit_n = 0;
-  for ( ; recHitIdIterator != recHitIdIteratorEnd; recHitIdIterator++) {
-    SiPixelRecHitCollection::DetSet detset = *recHitIdIterator;
-    DetId detId = DetId(detset.detId()); // Get the Detid object
-    const GeomDet* geomDet( theTracker->idToDet(detId) );
-    int subid = detId.subdetId();
-    SiPixelRecHitCollection::DetSet::const_iterator iterRecHit    = detset.begin();
-    SiPixelRecHitCollection::DetSet::const_iterator iterRecHitEnd = detset.end();
-    // Loop over rechits for this detid
-    for ( ; iterRecHit != iterRecHitEnd; ++iterRecHit) {
-      LocalPoint lp = iterRecHit->localPosition();
-      GlobalPoint GP = geomDet->surface().toGlobal(lp);
-      double rho = sqrt(GP.x()*GP.x() + GP.y()*GP.y());
-      if(rho < 20){
-        recHit_lx.push_back(lp.x());
-        recHit_ly.push_back(lp.y());
-        recHit_gx.push_back(GP.x());
-        recHit_gy.push_back(GP.y());
-        recHit_gz.push_back(GP.z());
-        recHit_rho.push_back(rho);
-        recHit_subid.push_back(subid);
-        if(subid==PixelSubdetector::PixelBarrel){
-          recHit_layer.push_back(topo->pxbLayer(detId.rawId()));
-          recHit_disk.push_back(-99);
-        }
-        if(subid==PixelSubdetector::PixelEndcap){
-          recHit_layer.push_back(-99);
-          recHit_disk.push_back(topo->pxfDisk(detId()));
-        }
-        // Cluster size
-        SiPixelRecHit::ClusterRef const& Cluster =  iterRecHit->cluster();
-        recHit_spread.push_back(Cluster->size());
-        recHit_spreadx.push_back(Cluster->sizeX());
-        recHit_spready.push_back(Cluster->sizeY());
-        recHit_n ++;
-      }
-    } // close loop over rechits for this detid
-  } // close loop over detector IDs
+  for ( ; recHitIdIterator != recHitIdIteratorEnd; recHitIdIterator++ ) {
+      SiPixelRecHitCollection::DetSet detset = *recHitIdIterator;
+      DetId detId = DetId(detset.detId()); // Get the Detid object
+      const GeomDet* geomDet( theTracker->idToDet(detId) );
+      int subid = detId.subdetId();
+      SiPixelRecHitCollection::DetSet::const_iterator iterRecHit    = detset.begin();
+      SiPixelRecHitCollection::DetSet::const_iterator iterRecHitEnd = detset.end();
+      // Loop over rechits for this detid
+      for ( ; iterRecHit != iterRecHitEnd; ++iterRecHit) {
+          LocalPoint lp = iterRecHit->localPosition();
+          GlobalPoint GP = geomDet->surface().toGlobal(lp);
+          double rho = sqrt(GP.x()*GP.x() + GP.y()*GP.y());
+          if ( rho < 20 ){ // rejects outer tracker
+             recHit_lx.push_back(lp.x());
+             recHit_ly.push_back(lp.y());
+             recHit_gx.push_back(GP.x());
+             recHit_gy.push_back(GP.y());
+             recHit_gz.push_back(GP.z());
+             recHit_rho.push_back(rho);
+             recHit_subid.push_back(subid);
+             if ( subid==PixelSubdetector::PixelBarrel ){
+                recHit_layer.push_back(topo->pxbLayer(detId.rawId()));
+                recHit_disk.push_back(-99);
+             }
+             if ( subid==PixelSubdetector::PixelEndcap ){
+                recHit_layer.push_back(-99);
+                recHit_disk.push_back(topo->pxfDisk(detId()));
+             }
+             // Cluster size
+             SiPixelRecHit::ClusterRef const& Cluster =  iterRecHit->cluster();
+             recHit_spread.push_back(Cluster->size());
+             recHit_spreadx.push_back(Cluster->sizeX());
+             recHit_spready.push_back(Cluster->sizeY());
+             recHit_n++;
+           }
+      } // close loop over rechits for this detid
+  } 
   ///////////////////////////////////////////////////////////
   // L1 Ecal Trigger Primitives
   //////////////////////////////////////////////////////////
@@ -347,11 +366,14 @@ void Pxecal::analyze(const edm::Event& e, const edm::EventSetup& es)
     simtrk_id.push_back( iterSimTracks->trackId() );   
     simtrk_type.push_back( iterSimTracks->type() );   
     int index = iterSimTracks->vertIndex();
+    simtrk_vx.push_back( simVertex->at(index).position().x() );   
+    simtrk_vy.push_back( simVertex->at(index).position().y() );   
+    simtrk_vz.push_back( simVertex->at(index).position().z() );  
     // index==0 gets the primary vertex;
     if(index==0){
-      gen_vx = simVertex->at(index).position().x();   
-      gen_vy = simVertex->at(index).position().y();   
-      gen_vz = simVertex->at(index).position().z();   
+      sim_vx = simVertex->at(index).position().x();   
+      sim_vy = simVertex->at(index).position().y();   
+      sim_vz = simVertex->at(index).position().z();   
     }
   }
   ///////////////////////////////////////////////////////////
@@ -361,43 +383,50 @@ void Pxecal::analyze(const edm::Event& e, const edm::EventSetup& es)
   e.getByLabel( "genParticles", genParticles );
   genpart_n = 0;
   genel_n = 0;
-  for(size_t i = 0; i < genParticles->size(); ++i){
-    const reco::GenParticle & genParticle = genParticles->at(i);
-    genpart_e.push_back( genParticle.energy() );
-    genpart_et.push_back( genParticle.et() );
-    genpart_pt.push_back( genParticle.pt() );
-    genpart_eta.push_back( genParticle.eta() );
-    genpart_phi.push_back( genParticle.phi() );
-    genpart_charge.push_back( genParticle.charge() );
-    genpart_id.push_back( genParticle.pdgId() );
-    genpart_n++;
-    if ( abs(genParticles->at(i).pdgId()) == 11  ) {
-      const reco::GenParticle & genElectron = genParticles->at(i);
-      genel_e.push_back( genElectron.energy() );
-      genel_et.push_back( genElectron.et() );
-      genel_pt.push_back( genElectron.pt() );
-      genel_eta.push_back( genElectron.eta() );
-      genel_phi.push_back( genElectron.phi() );
-      genel_charge.push_back( genElectron.charge() );
-      genel_id.push_back( genElectron.pdgId() );
-      genel_n++;
-    }
+  for ( size_t i = 0; i < genParticles->size(); ++i ){
+      const reco::GenParticle & genParticle = genParticles->at(i);
+      genpart_e.push_back( genParticle.energy() );
+      genpart_et.push_back( genParticle.et() );
+      genpart_pt.push_back( genParticle.pt() );
+      genpart_eta.push_back( genParticle.eta() );
+      genpart_phi.push_back( genParticle.phi() );
+      genpart_charge.push_back( genParticle.charge() );
+      genpart_id.push_back( genParticle.pdgId() );
+      genpart_n++;
+      if ( abs(genParticles->at(i).pdgId()) == 11  ) {
+         const reco::GenParticle & genElectron = genParticles->at(i);
+         genel_e.push_back( genElectron.energy() );
+         genel_et.push_back( genElectron.et() );
+         genel_pt.push_back( genElectron.pt() );
+         genel_eta.push_back( genElectron.eta() );
+         genel_phi.push_back( genElectron.phi() );
+         genel_charge.push_back( genElectron.charge() );
+         genel_id.push_back( genElectron.pdgId() );
+         genel_n++;
+      }
   }
   ///////////////////////////////////////////////////////////
   // Beam Spot  
   //////////////////////////////////////////////////////////
   edm::Handle<reco::BeamSpot> thebeamSpot;
-  e.getByLabel("BeamSpotFromSim", "BeamSpot", thebeamSpot);
-  beamspot_x = thebeamSpot->x0();
-  beamspot_y = thebeamSpot->y0();
-  beamspot_widthX = thebeamSpot->BeamWidthX();
-  beamspot_widthY = thebeamSpot->BeamWidthY();
-  beamspot_sigmaZ = thebeamSpot->sigmaZ();
+  e.getByLabel( "BeamSpotFromSim", "BeamSpot", thebeamSpot );
+  beamspot_x0          = thebeamSpot->x0();
+  beamspot_y0          = thebeamSpot->y0();
+  beamspot_z0          = thebeamSpot->z0();
+  beamspot_x0Error     = thebeamSpot->x0Error();
+  beamspot_y0Error     = thebeamSpot->y0Error();
+  beamspot_z0Error     = thebeamSpot->z0Error();
+  beamspot_widthX      = thebeamSpot->BeamWidthX();
+  beamspot_widthY      = thebeamSpot->BeamWidthY();
+  beamspot_sigmaZ      = thebeamSpot->sigmaZ();
+  beamspot_widthXError = thebeamSpot->BeamWidthXError();
+  beamspot_widthYError = thebeamSpot->BeamWidthYError();
+  beamspot_sigmaZError = thebeamSpot->sigmaZ0Error();
   ///////////////////////////////////////////////////////////
   // Pileup  
   //////////////////////////////////////////////////////////
   edm::Handle< std::vector<PileupSummaryInfo> > puinfo;
-  e.getByLabel("addPileupInfo", puinfo);
+  e.getByLabel( "addPileupInfo", puinfo );
   std::vector<PileupSummaryInfo>::const_iterator PVI;
   bunch_n=0;
   for(PVI = puinfo->begin(); PVI != puinfo->end(); ++PVI) {
@@ -430,6 +459,9 @@ void Pxecal::InitializeVectors()
       simtrk_phi.clear();
        simtrk_id.clear();
      simtrk_type.clear();
+       simtrk_vx.clear();
+       simtrk_vy.clear();
+       simtrk_vz.clear();
        genpart_e.clear();
       genpart_et.clear();
       genpart_pt.clear();
